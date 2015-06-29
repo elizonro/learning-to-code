@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Long Process Viewer</title>
+
+	<style type="text/css">
+		body {
+			margin: 0px;
+		}
+		.title {
+			text-align: center;
+		}
+		.image-container img {
+			width: 100%;
+			height: auto;
+		}
+		.mini-image {
+			width: 20%;
+			height: 100%;
+			position: fixed;
+		}
+		.mini-image .image-container {
+			width: 70%;
+			position: absolute;
+			left: 0%;
+			right: 0%;
+			margin: auto;
+		}
+		.full-image {
+			float: right;
+			width: 80%;
+		}
+		.full-image-container {
+			width: 97%;
+			/*margin: auto;*/
+		}
+		.highlight {
+			width: 110%;
+			background-color: rgba(0, 0, 0, 0.2);
+			position: absolute;
+			top: 0%;
+			left: -100%;
+			right: -99.25%;
+			margin: auto;
+		}
+		.no-select {
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			/*pointer-events: none;*/
+		}
+		.click-area {
+			position: absolute;
+			top: 0%;
+			left: 0%;
+			width: 100%;
+			height: 100%;
+		}
+		.input-container {
+			display: inline-block;
+			position: fixed;
+			top: 0%;
+			left: 0%;
+			right: 0%;
+			margin: auto;
+			width: 225px;
+		}
+		input {
+			padding: 20px;
+			background-color: #00b2ef;
+			transition: 0.2s;
+			transform: translateY(-70px);
+		}
+		.input-container:hover input {
+			transform: translateY(0px);
+		}
+	</style>
+</head>
+<body>
+	<div class="input-container">
+		<input id="file-input" type="file">
+	</div>
+	<div class="mini-image">
+		<div class="image-container mini-image-container">
+			<img class="side-image no-select" src="ElongatedJourneyMapTest.svg">
+			<div class="highlight"></div>
+		</div>
+		<div class="click-area"></div>
+	</div>
+	<div class="full-image">
+		<div class="image-container full-image-container">
+			<img class="main-image" src="ElongatedJourneyMapTest.svg">
+		</div>
+	</div>
+
+	<script type="text/javascript">
+
+		var fullImage = document.querySelector('.full-image-container');
+		var miniImage = document.querySelector('.mini-image-container');
+		var highlight = document.querySelector('.highlight');
+		var fullHeight = fullImage.clientHeight;
+		var miniHeight = miniImage.clientHeight;
+
+		window.onload = function(e) {
+			updatePositions(e);
+			/* navigation with left bar */
+			var isDragging = false;
+			document.querySelector('.click-area').addEventListener('mousedown', function(e) {
+				isDragging = true;
+				navigateByLeftBar(e);
+			});
+			document.querySelector('.click-area').addEventListener('mousemove', function(e) {
+				if (isDragging && e.which == 1) {
+					navigateByLeftBar(e);
+				}
+			});
+			document.querySelector('body').addEventListener('mouseup', function(e) {
+				if (isDragging) {
+					navigateByLeftBar(e);
+				}
+				isDragging = false;
+			});
+		};
+
+		window.onscroll = function(e) {
+			updatePositions(e);
+		};
+
+		window.onresize = function(e) {
+			updatePositions(e);
+		}
+
+		function navigateByLeftBar(e) {
+			fullHeight = fullImage.clientHeight;
+			miniHeight = miniImage.clientHeight;
+			var scrollRatio;
+			if (miniHeight < window.innerHeight) {
+				scrollRatio = e.clientY / miniHeight;
+			}
+			else {
+				scrollRatio = e.clientY / window.innerHeight;
+			}
+			var scrollPosition = scrollRatio * fullHeight - window.innerHeight / 2;
+			window.scrollTo(0, scrollPosition);
+		}
+
+		function updatePositions(e) {
+			fullHeight = fullImage.clientHeight;
+			miniHeight = miniImage.clientHeight;
+			var ratio = miniHeight / fullHeight;
+			var windowRatio = window.innerHeight / fullHeight;
+			var highlightHeight = windowRatio * miniHeight;
+			highlight.style.height = highlightHeight + 'px';
+
+			var scrollRatio = window.scrollY / (fullHeight - window.innerHeight);
+			var highlightPosition = scrollRatio * (miniHeight - highlightHeight);
+
+			// shifting entire left bar if it's longer than window
+			if (miniHeight > window.innerHeight) {
+				miniImage.style.top = - scrollRatio * (miniHeight - window.innerHeight) + 'px';
+			} else {
+				miniImage.style.top = '0px';
+			}
+			highlight.style.top = highlightPosition + 'px';
+		};
+
+		document.querySelector('#file-input').addEventListener('change', function() {
+			console.log(this.files);
+			openFile(this.files[0]);
+			setTimeout(function() {
+				document.querySelector('.main-image').style.height = '100%';
+				document.querySelector('.side-image').style.height = '100%';
+			}, 1);
+			setTimeout(function() {
+				document.querySelector('.main-image').style.height = 'auto';
+				document.querySelector('.side-image').style.height = 'auto';
+			}, 100);
+		})
+
+		var openFile = function(file) {
+			var reader = new FileReader();
+			reader.onload = function(){
+				var dataURL = reader.result;
+				document.querySelector('.side-image').src = dataURL;
+				document.querySelector('.main-image').src = dataURL;
+			};
+			reader.readAsDataURL(file);
+		};
+	</script>
+</body>
+</html>
